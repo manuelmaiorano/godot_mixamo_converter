@@ -232,7 +232,9 @@ def hip_to_root(armature, use_x=True, use_y=True, use_z=True, on_ground=True, us
     """function to bake hipmotion to RootMotion in MixamoRigs"""
 
     yield Status("starting hip_to_root")
-
+    scene = bpy.context.scene
+    scene.frame_set(0)
+    scene.frame_set(1)
     root = armature
     root.name = "root"
     root.rotation_mode = 'QUATERNION'
