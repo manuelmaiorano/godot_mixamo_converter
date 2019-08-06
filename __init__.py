@@ -21,8 +21,8 @@
 '''
 
 bl_info = {
-    "name": "Mixamo Converter",
-    "author": "Enzio Probst",
+    "name": "Mixamo Converter for Godot",
+    "author": "Enzio Probst, Álex Román",
     "version": (1, 2, 0),
     "blender": (2, 80, 0),
     "location": "3D View > UI (Right Panel) > Mixamo Tab",
