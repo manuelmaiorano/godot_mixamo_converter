@@ -147,7 +147,7 @@ class MixamoPropertyGroup(bpy.types.PropertyGroup):
     fixbind = bpy.props.BoolProperty(
         name="Fix Bind",
         description="If enabled, adds a dummy mesh and binds it, to prevent loss of bindpose when exporting fbx",
-        default=True)
+        default=False)
     apply_rotation = bpy.props.BoolProperty(
         name="Apply Rotation",
         description="Applies rotation during conversion to prevent rotation and scaling issues",

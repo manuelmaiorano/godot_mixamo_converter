@@ -1,6 +1,26 @@
 # Mixamo Converter
-is a Blender Plugin that Converts Mixamo animations to work in Unreal Engine 4 with root motion
-Blender 2.78 or newer needed to work
+is a Blender Plugin that Converts Mixamo animations to work in the Godot Engine (and UE4?) with root motion
+Blender 2.78 or newer needed to work (yes, 2.8 works)
+
+## Regarding godot changes
+
+This is a modified version of [enziop's UE4 tool](https://github.com/enziop/mixamo_converter), so it works a bit differently
+
+### Workflow
+
+As a result of this, the workflow is a bit different:
+
+* Upload model to mixamo without a root bone, only hips.
+* Download adjusted model and animations as FBX
+* Using batch convert, convert all FBX files (including model) to .blend files with root motion added
+
+Now, you can either use the resulting model .blend file or using the "convert single" option on your original model:
+
+* Open your moodel
+* Go to file -> append and select the animation .blend file you want
+* Go to Actions and select the only action there is
+* Open the Dope Sheet -> Animation Editor and select the action (both for verifying it works and ensuring it's not orphaned, else it won't export).
+* Export to godot using your favourite method (I use the .escn exporter)
 
 ### It can
 * convert single animations (FBX or Collada) if they are previously imported by the user

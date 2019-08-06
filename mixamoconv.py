@@ -134,6 +134,15 @@ def key_all_bones(armature, frame_range = (1, 2)):
         bpy.ops.anim.keyframe_insert_menu(type='BUILTIN_KSI_LocRot')
     bpy.ops.object.mode_set(mode='OBJECT')
 
+def create_root(armature, hipbone):
+    bpy.context.view_layer.objects.active = armature
+    bpy.ops.object.mode_set(mode='EDIT')
+    root_bone = armature.data.edit_bones.new('root')
+    root_bone.tail = hipbone.bone.head
+    armature.data.edit_bones[hipbone.name].parent = root_bone
+    bpy.ops.object.mode_set(mode='OBJECT')
+    
+
 def apply_restoffset(armature, hipbone, restoffset):
     """function to apply restoffset to rig, should be used if rest-/bindpose does not stand on ground with feet"""
     # apply rest offset to restpose
@@ -212,13 +221,14 @@ def quaternion_cleanup(object, prevent_flips=True, prevent_inverts=True):
 
 class Status:
     def __init__(self, msg, status_type='default'):
+        print(msg)
         self.msg = msg
         self.status_type = status_type
     def __str__(self):
         return str(self.msg)
 
 def hip_to_root(armature, use_x=True, use_y=True, use_z=True, on_ground=True, use_rotation=True, scale=1.0, restoffset=(0, 0, 0),
-                hipname='', fixbind=True, apply_rotation=True, apply_scale=False, quaternion_clean_pre=True, quaternion_clean_post=True):
+                hipname='', fixbind=False, apply_rotation=True, apply_scale=False, quaternion_clean_pre=True, quaternion_clean_post=True):
     """function to bake hipmotion to RootMotion in MixamoRigs"""
 
     yield Status("starting hip_to_root")
@@ -237,6 +247,7 @@ def hip_to_root(armature, use_x=True, use_y=True, use_z=True, on_ground=True, us
         raise ValueError("no hips found")
     else:
         yield Status("hips found")
+
 
     key_all_bones(root, (1, 2))
 
@@ -257,6 +268,7 @@ def hip_to_root(armature, use_x=True, use_y=True, use_z=True, on_ground=True, us
     # apply restoffset to restpose and correct animation
     apply_restoffset(root, hips, restoffset)
     yield Status("restoffset")
+
 
     hiplocation_world = root.matrix_local @ hips.bone.head
     z_offset = hiplocation_world[2]
@@ -334,18 +346,24 @@ def hip_to_root(armature, use_x=True, use_y=True, use_z=True, on_ground=True, us
         yield Status("apply transform")
 
     # Bake Root motion to Armature (root)
-    bpy.ops.object.constraint_add(type='COPY_LOCATION')
-    bpy.context.object.constraints["Copy Location"].target = rootBaker
+    create_root(armature, hips)
+    hipsBaker.select_set(False)
+    bpy.ops.object.mode_set(mode='POSE')
+    rb = root.pose.bones.get('root')
+    rb.bone.select = True
+    root.data.bones.active = rb.bone
 
-    bpy.ops.object.constraint_add(type='COPY_ROTATION')
-    bpy.context.object.constraints["Copy Rotation"].target = bpy.data.objects["rootBaker"]
-    bpy.context.object.constraints["Copy Rotation"].use_offset = True
+    bpy.ops.pose.constraint_add(type='COPY_LOCATION')
+    rb.constraints["Copy Location"].target = rootBaker
+    bpy.ops.pose.constraint_add(type='COPY_ROTATION')
+    rb.constraints["Copy Rotation"].target = rootBaker
+    rb.constraints["Copy Rotation"].use_offset = True
     yield Status("root constrained to rootBaker")
-
     bpy.ops.nla.bake(frame_start=framerange[0], frame_end=framerange[1], step=1, only_selected=True, visual_keying=True,
-                     clear_constraints=True, clear_parents=False, use_current_action=True, bake_types={'OBJECT'})
+                     clear_constraints=True, clear_parents=False, use_current_action=True, bake_types={'POSE'})
 
     yield Status("rootBaker baked back")
+    bpy.ops.object.mode_set(mode='OBJECT')
     quaternion_cleanup(root)
     yield Status("root quaternion cleanup")
     hipsBaker.select_set(False)
@@ -358,6 +376,7 @@ def hip_to_root(armature, use_x=True, use_y=True, use_z=True, on_ground=True, us
     hips.constraints["Copy Location"].target = hipsBaker
     bpy.ops.pose.constraint_add(type='COPY_ROTATION')
     hips.constraints["Copy Rotation"].target = hipsBaker
+
     yield Status("hips constrained to hipsBaker")
 
     bpy.ops.nla.bake(frame_start=framerange[0], frame_end=framerange[1], step=1, only_selected=True, visual_keying=True,
@@ -501,14 +520,8 @@ def batch_hip_to_root(source_dir, dest_dir, use_x=True, use_y=True, use_z=True, 
                     bpy.data.actions.remove(action, do_unlink=True)
 
             # store file to disk
-            output_file = dest_dir + file.name[:-4] + ".fbx"
-            bpy.ops.export_scene.fbx(filepath=output_file,
-                                     use_selection=False,
-                                     apply_unit_scale=False,
-                                     add_leaf_bones=add_leaf_bones,
-                                     axis_forward='-Z',
-                                     axis_up='Y',
-                                     mesh_smooth_type='FACE')
+            output_file = dest_dir + file.name[:-4] + "_root.blend"
+            bpy.ops.wm.save_as_mainfile(filepath=output_file)
             bpy.ops.object.select_all(action='SELECT')
             bpy.ops.object.delete(use_global=False)
     return numfiles
