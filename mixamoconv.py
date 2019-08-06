@@ -519,8 +519,10 @@ def batch_hip_to_root(source_dir, dest_dir, use_x=True, use_y=True, use_z=True, 
                 if action != armature.animation_data.action:
                     bpy.data.actions.remove(action, do_unlink=True)
 
-            # store file to disk
-            output_file = dest_dir + file.name[:-4] + "_root.blend"
+            # store file to disk and rename main action to have the proper name
+            output_file = dest_dir + file.name[:-4] + ".blend"
+            if len(bpy.data.actions) > 0:
+                bpy.data.actions[0].name = file.name[:-4]
             bpy.ops.wm.save_as_mainfile(filepath=output_file)
             bpy.ops.object.select_all(action='SELECT')
             bpy.ops.object.delete(use_global=False)
