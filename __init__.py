@@ -170,7 +170,10 @@ class OBJECT_OT_RemoveNamespace(bpy.types.Operator):
     '''Button/Operator for removing namespaces from selection'''
     bl_idname = "mixamo.remove_namespace"
     bl_label = ""
-    description = "Removes all namespaces of selection (for single Convert)"
+
+    @classmethod
+    def description(context, properties):
+        return "Removes all namespaces of selection (for single Convert)"
 
     def execute(self, context):
         mixamo = context.scene.mixamo
