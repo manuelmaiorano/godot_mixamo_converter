@@ -172,7 +172,7 @@ class OBJECT_OT_RemoveNamespace(bpy.types.Operator):
     bl_label = ""
 
     @classmethod
-    def description(context, properties):
+    def description(self, context, properties):
         return "Removes all namespaces of selection (for single Convert)"
 
     def execute(self, context):
